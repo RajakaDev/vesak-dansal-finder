@@ -12,20 +12,76 @@ import { db } from "../firebase";
 import { text } from "../lang";
 
 const defaultFoodTypes = [
-  "බත් දන්සල", "කොට්ටු", "නූඩ්ල්ස්", "අයිස්ක්‍රීම්", "තේ", "කෝපි",
-  "සිසිල් බීම", "සුප්", "පාන්", "කඩල", "මඤ්ඤොක්කා",
-  "Rice Dansal", "Kottu", "Noodles", "Ice Cream", "Tea", "Coffee",
+  "බත් දන්සල",
+  "කොට්ටු",
+  "නූඩ්ල්ස්",
+  "අයිස්ක්‍රීම්",
+  "තේ",
+  "කෝපි",
+  "සිසිල් බීම",
+  "සුප්",
+  "පාන්",
+  "කඩල",
+  "මඤ්ඤොක්කා",
+  "Rice Dansal",
+  "Kottu",
+  "Noodles",
+  "Ice Cream",
+  "Tea",
+  "Coffee",
 ];
 
 const locations = [
-  "කොළඹ", "ගම්පහ", "කළුතර", "මහනුවර", "ගාල්ල", "මාතර", "කුරුණෑගල",
-  "අනුරාධපුර", "රත්නපුර", "බදුල්ල", "යාපනය", "ත්‍රිකුණාමලය",
-  "මඩකලපුව", "නුවර එළිය", "හලාවත", "නෙගමෝ", "මීගමුව",
-  "Colombo", "Gampaha", "Kalutara", "Kandy", "Galle", "Matara",
-  "Kurunegala", "Anuradhapura", "Ratnapura", "Badulla", "Jaffna",
-  "Trincomalee", "Batticaloa", "Nuwara Eliya", "Negombo",
-  "Nugegoda", "Maharagama", "Dehiwala", "Moratuwa", "Malabe",
-  "Battaramulla", "Rajagiriya", "Pettah", "Fort", "Wellawatte",
+  "කොළඹ",
+  "ගම්පහ",
+  "කළුතර",
+  "මහනුවර",
+  "මාතලේ",
+  "නුවර එළිය",
+  "ගාල්ල",
+  "මාතර",
+  "හම්බන්තොට",
+  "යාපනය",
+  "කිලිනොච්චි",
+  "මන්නාරම",
+  "වවුනියාව",
+  "මුලතිව්",
+  "මඩකලපුව",
+  "අම්පාර",
+  "ත්‍රිකුණාමලය",
+  "කුරුණෑගල",
+  "පුත්තලම",
+  "අනුරාධපුර",
+  "පොළොන්නරුව",
+  "බදුල්ල",
+  "මොණරාගල",
+  "රත්නපුර",
+  "කෑගල්ල",
+  "Colombo",
+  "Gampaha",
+  "Kalutara",
+  "Kandy",
+  "Matale",
+  "Nuwara Eliya",
+  "Galle",
+  "Matara",
+  "Hambantota",
+  "Jaffna",
+  "Kilinochchi",
+  "Mannar",
+  "Vavuniya",
+  "Mullaitivu",
+  "Batticaloa",
+  "Ampara",
+  "Trincomalee",
+  "Kurunegala",
+  "Puttalam",
+  "Anuradhapura",
+  "Polonnaruwa",
+  "Badulla",
+  "Monaragala",
+  "Ratnapura",
+  "Kegalle",
 ];
 
 export default function AddDansal({ lang = "si" }) {
@@ -39,6 +95,7 @@ export default function AddDansal({ lang = "si" }) {
     name: "",
     foodType: "",
     location: "",
+    customLocation: "",
     exactLocation: "",
     mapLink: "",
     date: "",
@@ -86,6 +143,9 @@ export default function AddDansal({ lang = "si" }) {
       ...form,
       queue: "medium",
       status: "open",
+      verified: false,
+      hidden: false,
+      reportCount: 0,
       finishVotesCount: 0,
       queueVotesCount: 0,
       createdAt: serverTimestamp(),
@@ -99,7 +159,10 @@ export default function AddDansal({ lang = "si" }) {
     <div className="page active">
       <div className="add-form">
         <div style={{ paddingTop: 8 }}>
-          <Link className="detail-back" to="/">{t.back}</Link>
+          <Link className="detail-back" to="/">
+            {t.back}
+          </Link>
+
           <div className="form-section-title">{t.addTitle}</div>
           <p className="form-section-desc">{t.addDesc}</p>
         </div>
@@ -112,7 +175,11 @@ export default function AddDansal({ lang = "si" }) {
                 className="form-input"
                 name="name"
                 required
-                placeholder={lang === "si" ? "උදා: නුගේගොඩ බත් දන්සල" : "Example: Nugegoda Rice Dansal"}
+                placeholder={
+                  lang === "si"
+                    ? "උදා: නුගේගොඩ බත් දන්සල"
+                    : "Example: Nugegoda Rice Dansal"
+                }
                 value={form.name}
                 onChange={handleChange}
               />
@@ -127,20 +194,32 @@ export default function AddDansal({ lang = "si" }) {
                 value={form.foodType}
                 onChange={handleChange}
               >
-                <option value="">{lang === "si" ? "ආහාර වර්ගය තෝරන්න" : "Select food type"}</option>
+                <option value="">
+                  {lang === "si" ? "ආහාර වර්ගය තෝරන්න" : "Select food type"}
+                </option>
+
                 {foodTypes.map((food) => (
-                  <option key={food} value={food}>{food}</option>
+                  <option key={food} value={food}>
+                    {food}
+                  </option>
                 ))}
               </select>
 
               <div className="food-add-row">
                 <input
                   className="food-add-input"
-                  placeholder={lang === "si" ? "නව ආහාර වර්ගය" : "New food type"}
+                  placeholder={
+                    lang === "si" ? "නව ආහාර වර්ගය" : "New food type"
+                  }
                   value={newFood}
                   onChange={(e) => setNewFood(e.target.value)}
                 />
-                <button type="button" className="food-add-btn" onClick={addFoodType}>
+
+                <button
+                  type="button"
+                  className="food-add-btn"
+                  onClick={addFoodType}
+                >
                   {lang === "si" ? "එක් කරන්න" : "Add"}
                 </button>
               </div>
@@ -155,11 +234,34 @@ export default function AddDansal({ lang = "si" }) {
                 value={form.location}
                 onChange={handleChange}
               >
-                <option value="">{lang === "si" ? "ප්‍රදේශය තෝරන්න" : "Select location"}</option>
+                <option value="">
+                  {lang === "si" ? "දිස්ත්‍රික්කය තෝරන්න" : "Select district"}
+                </option>
+
                 {locations.map((loc) => (
-                  <option key={loc} value={loc}>{loc}</option>
+                  <option key={loc} value={loc}>
+                    {loc}
+                  </option>
                 ))}
               </select>
+            </div>
+
+            <div className="form-group form-full">
+              <label className="form-label">
+                {lang === "si" ? "ගම / නගරය" : "Town / Village"}
+              </label>
+
+              <input
+                className="form-input"
+                name="customLocation"
+                placeholder={
+                  lang === "si"
+                    ? "උදා: කිරිබත්ගොඩ, බොරැල්ල, වත්තල"
+                    : "Example: Kiribathgoda, Borella, Wattala"
+                }
+                value={form.customLocation}
+                onChange={handleChange}
+              />
             </div>
 
             <div className="form-group form-full">
@@ -168,14 +270,24 @@ export default function AddDansal({ lang = "si" }) {
                 className="form-input"
                 name="exactLocation"
                 required
-                placeholder={lang === "si" ? "උදා: බස් නැවතුම අසල" : "Example: Near bus stand"}
+                placeholder={
+                  lang === "si"
+                    ? "උදා: බස් නැවතුම අසල"
+                    : "Example: Near bus stand"
+                }
                 value={form.exactLocation}
                 onChange={handleChange}
               />
             </div>
 
             <div className="form-group form-full">
-              <label className="form-label">{t.map} <span style={{ color: "var(--vesak-muted)" }}>(Optional)</span></label>
+              <label className="form-label">
+                {t.map}{" "}
+                <span style={{ color: "var(--vesak-muted)" }}>
+                  {lang === "si" ? "(විකල්ප)" : "(Optional)"}
+                </span>
+              </label>
+
               <input
                 className="form-input"
                 name="mapLink"
@@ -198,7 +310,9 @@ export default function AddDansal({ lang = "si" }) {
             </div>
 
             <div className="form-group">
-              <label className="form-label">{lang === "si" ? "ආරම්භ වේලාව" : "Start Time"}</label>
+              <label className="form-label">
+                {lang === "si" ? "ආරම්භ වේලාව" : "Start Time"}
+              </label>
               <input
                 className="form-input"
                 name="openTime"
@@ -212,7 +326,9 @@ export default function AddDansal({ lang = "si" }) {
             <div className="form-group">
               <label className="form-label">
                 {lang === "si" ? "අවසන් වේලාව" : "End Time"}{" "}
-                <span style={{ color: "var(--vesak-muted)" }}>(Optional)</span>
+                <span style={{ color: "var(--vesak-muted)" }}>
+                  {lang === "si" ? "(විකල්ප)" : "(Optional)"}
+                </span>
               </label>
               <input
                 className="form-input"

@@ -58,6 +58,20 @@ export default function DansalDetails({ lang = "si" }) {
     };
   }, [id]);
 
+  const checkAutoVerify = async () => {
+    const photoSnap = await getDocs(collection(db, "dansals", id, "photos"));
+    const queueSnap = await getDocs(collection(db, "dansals", id, "queueVotes"));
+    const commentSnap = await getDocs(collection(db, "dansals", id, "comments"));
+
+    if (photoSnap.size >= 1 && queueSnap.size >= 1 && commentSnap.size >= 1) {
+      await updateDoc(doc(db, "dansals", id), {
+        verified: true,
+        verifiedType: "community",
+        updatedAt: serverTimestamp(),
+      });
+    }
+  };
+
   const shareDansal = async () => {
     if (!dansal) return;
 
@@ -80,6 +94,9 @@ export default function DansalDetails({ lang = "si" }) {
   };
 
   const reportWrongInfo = async () => {
+    const userId = await getCurrentUserId();
+    if (!userId) return;
+
     const reason = prompt(
       lang === "si"
         ? "වැරදි තොරතුර කෙටියෙන් ලියන්න:"
@@ -88,15 +105,24 @@ export default function DansalDetails({ lang = "si" }) {
 
     if (!reason?.trim()) return;
 
-    await addDoc(collection(db, "dansals", id, "reports"), {
+    await setDoc(doc(db, "dansals", id, "reports", userId), {
       reason: reason.trim(),
       createdAt: serverTimestamp(),
     });
 
+    const snap = await getDocs(collection(db, "dansals", id, "reports"));
+    const count = snap.size;
+
+    await updateDoc(doc(db, "dansals", id), {
+      reportCount: count,
+      hidden: count >= 10,
+      updatedAt: serverTimestamp(),
+    });
+
     alert(
       lang === "si"
-        ? "Report එක ලැබුණා. ස්තුතියි!"
-        : "Report received. Thank you!"
+        ? `Report එක ලැබුණා. දැන් reports: ${count}/10`
+        : `Report received. Reports: ${count}/10`
     );
   };
 
@@ -110,6 +136,7 @@ export default function DansalDetails({ lang = "si" }) {
     });
 
     await calculateQueueResult();
+    await checkAutoVerify();
   };
 
   const calculateQueueResult = async () => {
@@ -167,6 +194,7 @@ export default function DansalDetails({ lang = "si" }) {
     });
 
     setComment("");
+    await checkAutoVerify();
   };
 
   const uploadMemoryPhoto = async (e) => {
@@ -209,6 +237,8 @@ export default function DansalDetails({ lang = "si" }) {
         publicId: uploaded.public_id || "",
         createdAt: serverTimestamp(),
       });
+
+      await checkAutoVerify();
     } catch (err) {
       console.error(err);
       alert(
@@ -237,7 +267,14 @@ export default function DansalDetails({ lang = "si" }) {
           ← {lang === "si" ? "සියලු දන්සල්" : "All Dansals"}
         </Link>
 
-        <div className="detail-name">🏮 {dansal.name}</div>
+        <div className="detail-name">
+          🏮 {dansal.name}
+          {dansal.verified && (
+            <span className="verified-badge">
+              ✅ {lang === "si" ? "තහවුරුයි" : "Verified"}
+            </span>
+          )}
+        </div>
 
         <div className="detail-meta">
           <div className="detail-meta-row">
@@ -275,6 +312,8 @@ export default function DansalDetails({ lang = "si" }) {
               ? "වැරදි තොරතුරක් Report කරන්න"
               : "Report Wrong Info"}
           </button>
+
+          <p className="small-note">Reports: {dansal.reportCount || 0}/10</p>
         </div>
       </div>
 
@@ -297,22 +336,13 @@ export default function DansalDetails({ lang = "si" }) {
           <button className="queue-btn qb-no" onClick={() => updateQueueVote("no")}>
             🟢 {lang === "si" ? "පෝලිම නැහැ" : "No Queue"}
           </button>
-          <button
-            className="queue-btn qb-short"
-            onClick={() => updateQueueVote("short")}
-          >
+          <button className="queue-btn qb-short" onClick={() => updateQueueVote("short")}>
             🟡 {lang === "si" ? "කෙටි" : "Short"}
           </button>
-          <button
-            className="queue-btn qb-medium"
-            onClick={() => updateQueueVote("medium")}
-          >
+          <button className="queue-btn qb-medium" onClick={() => updateQueueVote("medium")}>
             🟠 {lang === "si" ? "මධ්‍යම" : "Medium"}
           </button>
-          <button
-            className="queue-btn qb-long"
-            onClick={() => updateQueueVote("long")}
-          >
+          <button className="queue-btn qb-long" onClick={() => updateQueueVote("long")}>
             🔴 {lang === "si" ? "දිග" : "Long"}
           </button>
         </div>

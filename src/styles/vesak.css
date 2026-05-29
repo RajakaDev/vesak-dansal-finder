@@ -986,3 +986,25 @@ textarea {
     padding-right: 14px;
   }
 }
+
+.verified-badge {
+  display: inline-flex;
+  margin-left: 6px;
+  background: rgba(78, 203, 138, 0.14);
+  color: #59d68c;
+  border: 1px solid rgba(78, 203, 138, 0.28);
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+}
+.filter-row-3 {
+  max-width: 760px;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 700px) {
+  .filter-row-3 {
+    grid-template-columns: 1fr;
+  }
+}

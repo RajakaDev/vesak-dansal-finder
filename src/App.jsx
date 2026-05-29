@@ -3,6 +3,9 @@ import { useState } from "react";
 import Home from "./pages/Home";
 import AddDansal from "./pages/AddDansal";
 import DansalDetails from "./pages/DansalDetails";
+import Thorans from "./pages/Thorans";
+import AddThoran from "./pages/AddThoran";
+import ThoranDetails from "./pages/ThoranDetails";
 
 export default function App() {
   const [lang, setLang] = useState("si");
@@ -26,6 +29,13 @@ export default function App() {
             <Link to="/add" className="nav-btn">
               {lang === "si" ? "+ දන්සලක්" : "+ Add"}
             </Link>
+            <Link to="/thorans" className="nav-btn">
+  {lang === "si" ? "තොරණ" : "Thoran"}
+</Link>
+
+<Link to="/add-thoran" className="nav-btn">
+  + {lang === "si" ? "තොරණ" : "Thoran"}
+</Link>
           </div>
         </nav>
 
@@ -33,6 +43,9 @@ export default function App() {
           <Route path="/" element={<Home lang={lang} />} />
           <Route path="/add" element={<AddDansal lang={lang} />} />
           <Route path="/dansal/:id" element={<DansalDetails lang={lang} />} />
+          <Route path="/thorans" element={<Thorans lang={lang} />} />
+          <Route path="/add-thoran" element={<AddThoran lang={lang} />} />
+          <Route path="/thoran/:id" element={<ThoranDetails lang={lang} />} />
         </Routes>
 
         <div className="lotuses" />
