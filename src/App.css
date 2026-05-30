@@ -430,3 +430,85 @@
 .analytics-row strong {
   color: var(--vesak-gold);
 }
+
+.admin-list {
+  max-width: 1000px;
+  margin: 0 auto 50px;
+  padding: 0 14px;
+  display: grid;
+  gap: 14px;
+}
+
+.admin-card {
+  background: var(--vesak-card);
+  border: 1px solid var(--vesak-border);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.admin-card h3 {
+  color: var(--vesak-gold);
+  margin: 0 0 8px;
+}
+
+.admin-card p {
+  color: var(--vesak-muted);
+  margin: 4px 0;
+  font-size: 13px;
+}
+
+.admin-actions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.admin-actions button,
+.admin-photo-item button {
+  border: 1px solid rgba(255, 208, 80, 0.22);
+  background: rgba(255, 208, 80, 0.1);
+  color: var(--vesak-gold);
+  border-radius: 12px;
+  padding: 10px;
+  font-weight: 900;
+  cursor: pointer;
+}
+
+.admin-actions .danger,
+.admin-photo-item .danger {
+  border-color: rgba(255, 80, 80, 0.28);
+  background: rgba(255, 80, 80, 0.1);
+  color: #ff9090;
+}
+
+.admin-photos {
+  margin-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.admin-photo-item img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid var(--vesak-border);
+}
+
+.admin-photo-item button {
+  width: 100%;
+  margin-top: 6px;
+  font-size: 11px;
+}
+
+@media (max-width: 700px) {
+  .admin-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .admin-photos {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
