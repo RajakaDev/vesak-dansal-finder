@@ -367,7 +367,7 @@
 
 .analytics-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 12px;
   margin-top: 16px;
 }
@@ -376,8 +376,9 @@
   background: var(--vesak-card);
   border: 1px solid var(--vesak-border);
   border-radius: 18px;
-  padding: 16px;
+  padding: 18px 14px;
   text-align: center;
+  min-height: 120px;
 }
 
 .analytics-card span {
