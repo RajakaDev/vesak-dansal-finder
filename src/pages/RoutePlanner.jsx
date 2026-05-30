@@ -33,7 +33,9 @@ export default function RoutePlanner({ lang = "si" }) {
     return () => unsub();
   }, []);
 
-  const selectedDansals = dansals.filter((d) => selectedIds.includes(d.id));
+  const selectedDansals = selectedIds
+    .map((id) => dansals.find((d) => d.id === id))
+    .filter(Boolean);
 
   const totalDistance = useMemo(() => {
     if (selectedDansals.length < 2) return 0;
@@ -44,7 +46,12 @@ export default function RoutePlanner({ lang = "si" }) {
       const a = selectedDansals[i];
       const b = selectedDansals[i + 1];
 
-      total += distanceKm(Number(a.lat), Number(a.lng), Number(b.lat), Number(b.lng));
+      total += distanceKm(
+        Number(a.lat),
+        Number(a.lng),
+        Number(b.lat),
+        Number(b.lng)
+      );
     }
 
     return total;
@@ -58,18 +65,48 @@ export default function RoutePlanner({ lang = "si" }) {
 
   const toggleSelect = (id) => {
     setSelectedIds((prev) =>
-      prev.includes(id)
-        ? prev.filter((x) => x !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
+  };
+
+  const optimizeRoute = () => {
+    if (selectedDansals.length < 2) return;
+
+    const remaining = [...selectedDansals];
+    const optimized = [];
+
+    let current = remaining.shift();
+    optimized.push(current);
+
+    while (remaining.length > 0) {
+      let nearestIndex = 0;
+      let nearestDistance = Infinity;
+
+      remaining.forEach((d, index) => {
+        const dist = distanceKm(
+          Number(current.lat),
+          Number(current.lng),
+          Number(d.lat),
+          Number(d.lng)
+        );
+
+        if (dist < nearestDistance) {
+          nearestDistance = dist;
+          nearestIndex = index;
+        }
+      });
+
+      current = remaining.splice(nearestIndex, 1)[0];
+      optimized.push(current);
+    }
+
+    setSelectedIds(optimized.map((d) => d.id));
   };
 
   const openGoogleMapsRoute = () => {
     if (selectedDansals.length === 0) return;
 
-    const points = selectedDansals
-      .map((d) => `${d.lat},${d.lng}`)
-      .join("/");
+    const points = selectedDansals.map((d) => `${d.lat},${d.lng}`).join("/");
 
     window.open(`https://www.google.com/maps/dir/${points}`, "_blank");
   };
@@ -82,19 +119,18 @@ export default function RoutePlanner({ lang = "si" }) {
         </Link>
 
         <div className="form-section-title">
-          🧭 {lang === "si" ? "දන්සල් මාර්ගය සැලසුම් කරන්න" : "Plan Dansal Route"}
+          🧭{" "}
+          {lang === "si" ? "දන්සල් මාර්ගය සැලසුම් කරන්න" : "Plan Dansal Route"}
         </div>
 
         <p className="form-section-desc">
           {lang === "si"
-            ? "GPS location ඇති දන්සල් තෝරාගෙන Google Maps මාර්ගයක් සාදන්න."
-            : "Select dansals with GPS locations and create a Google Maps route."}
+            ? "GPS location ඇති දන්සල් තෝරාගෙන කෙටි මාර්ගයක් සැලසුම් කරන්න."
+            : "Select dansals with GPS locations and plan an optimized route."}
         </p>
 
         <div className="route-report">
-          <strong>
-            {lang === "si" ? "මාර්ග වාර්තාව" : "Route Report"}
-          </strong>
+          <strong>{lang === "si" ? "මාර්ග වාර්තාව" : "Route Report"}</strong>
 
           <p>
             {lang === "si" ? "තෝරාගත් දන්සල්" : "Selected Dansals"}:{" "}
@@ -116,14 +152,29 @@ export default function RoutePlanner({ lang = "si" }) {
             {estimatedMinutes} mins
           </p>
 
-          <button
-            className="submit-btn"
-            type="button"
-            disabled={selectedDansals.length === 0}
-            onClick={openGoogleMapsRoute}
-          >
-            🗺️ {lang === "si" ? "Google Maps Route විවෘත කරන්න" : "Open Google Maps Route"}
-          </button>
+          <div className="route-action-grid">
+            <button
+              className="home-action-btn"
+              type="button"
+              disabled={selectedDansals.length < 2}
+              onClick={optimizeRoute}
+            >
+              ⚡{" "}
+              {lang === "si" ? "කෙටිම මාර්ගයට සකසන්න" : "Optimize Route"}
+            </button>
+
+            <button
+              className="submit-btn"
+              type="button"
+              disabled={selectedDansals.length === 0}
+              onClick={openGoogleMapsRoute}
+            >
+              🗺️{" "}
+              {lang === "si"
+                ? "Google Maps Route විවෘත කරන්න"
+                : "Open Google Maps Route"}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -138,13 +189,18 @@ export default function RoutePlanner({ lang = "si" }) {
           dansals.map((d) => (
             <button
               key={d.id}
-              className={`route-card ${selectedIds.includes(d.id) ? "selected" : ""}`}
+              className={`route-card ${
+                selectedIds.includes(d.id) ? "selected" : ""
+              }`}
               onClick={() => toggleSelect(d.id)}
               type="button"
             >
               <div>
                 <strong>🍛 {d.name}</strong>
-                <p>📍 {d.location} {d.customLocation ? `- ${d.customLocation}` : ""}</p>
+                <p>
+                  📍 {d.location}{" "}
+                  {d.customLocation ? `- ${d.customLocation}` : ""}
+                </p>
                 <p>🍽️ {d.foodType}</p>
               </div>
 

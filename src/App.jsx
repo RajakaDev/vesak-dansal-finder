@@ -8,6 +8,7 @@ import AddThoran from "./pages/AddThoran";
 import ThoranDetails from "./pages/ThoranDetails";
 import DansalMap from "./pages/DansalMap";
 import RoutePlanner from "./pages/RoutePlanner";
+import Analytics from "./pages/Analytics";
 
 export default function App() {
   const [lang, setLang] = useState("si");
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="/thoran/:id" element={<ThoranDetails lang={lang} />} />
           <Route path="/map" element={<DansalMap lang={lang} />} />
           <Route path="/route" element={<RoutePlanner lang={lang} />} />
+          <Route path="/analytics" element={<Analytics lang={lang} />} />
         </Routes>
 
         <div className="lotuses" />

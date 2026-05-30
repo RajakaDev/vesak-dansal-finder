@@ -34,6 +34,20 @@ function queueClass(q) {
   }[q] || "medium";
 }
 
+function distanceKm(lat1, lon1, lat2, lon2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
+
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+}
+
 export default function Home({ lang = "si" }) {
   const t = text[lang] || text.si;
 
@@ -43,6 +57,8 @@ export default function Home({ lang = "si" }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [districtFilter, setDistrictFilter] = useState("all");
   const [foodFilter, setFoodFilter] = useState("all");
+  const [userLocation, setUserLocation] = useState(null);
+  const [nearbyOnly, setNearbyOnly] = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, "dansals"), (snapshot) => {
@@ -62,6 +78,26 @@ export default function Home({ lang = "si" }) {
 
     return () => unsub();
   }, []);
+
+  const findNearby = () => {
+    if (!navigator.geolocation) {
+      alert(lang === "si" ? "GPS support නැහැ" : "GPS not supported");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setUserLocation({
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+        setNearbyOnly(true);
+      },
+      () => {
+        alert(lang === "si" ? "GPS permission දෙන්න" : "Please allow GPS");
+      }
+    );
+  };
 
   const visibleDansals = dansals.filter((d) => d.hidden !== true);
 
@@ -92,16 +128,55 @@ export default function Home({ lang = "si" }) {
 
     const matchesFood = foodFilter === "all" || d.foodType === foodFilter;
 
+    const distance =
+      userLocation && d.lat && d.lng
+        ? distanceKm(
+            userLocation.lat,
+            userLocation.lng,
+            Number(d.lat),
+            Number(d.lng)
+          )
+        : null;
+
+    const matchesNearby = !nearbyOnly || (distance !== null && distance <= 10);
+
     return (
       matchesSearch &&
       matchesQueue &&
       matchesStatus &&
       matchesDistrict &&
-      matchesFood
+      matchesFood &&
+      matchesNearby
     );
   });
 
-  const openNowDansals = filtered
+  const sortedFiltered = [...filtered].sort((a, b) => {
+    if (!userLocation) return 0;
+
+    const da =
+      a.lat && a.lng
+        ? distanceKm(
+            userLocation.lat,
+            userLocation.lng,
+            Number(a.lat),
+            Number(a.lng)
+          )
+        : 99999;
+
+    const db =
+      b.lat && b.lng
+        ? distanceKm(
+            userLocation.lat,
+            userLocation.lng,
+            Number(b.lat),
+            Number(b.lng)
+          )
+        : 99999;
+
+    return da - db;
+  });
+
+  const openNowDansals = sortedFiltered
     .filter((d) => {
       const status = getDansalTimeStatus(d.date, d.openTime, d.closeTime);
       return status.type === "now";
@@ -209,17 +284,37 @@ export default function Home({ lang = "si" }) {
             </option>
           </select>
         </div>
+
+        <button className="gps-btn" onClick={findNearby}>
+          📍 {lang === "si" ? "මා අසල දන්සල්" : "Nearby Dansals"}
+        </button>
+
+        {nearbyOnly && (
+          <button
+            className="clear-gps-btn"
+            onClick={() => {
+              setNearbyOnly(false);
+              setUserLocation(null);
+            }}
+          >
+            ✕ {lang === "si" ? "Nearby ඉවත් කරන්න" : "Clear Nearby"}
+          </button>
+        )}
+
+        <div className="home-action-row">
+          <Link to="/map" className="home-action-btn">
+            🗺️ {lang === "si" ? "සිතියමෙන් බලන්න" : "View Map"}
+          </Link>
+
+          <Link to="/route" className="home-action-btn">
+            🧭 {lang === "si" ? "මාර්ගය සැලසුම් කරන්න" : "Plan Route"}
+          </Link>
+
+          <Link to="/analytics" className="home-action-btn">
+            📊 {lang === "si" ? "විශ්ලේෂණ" : "Analytics"}
+          </Link>
+        </div>
       </div>
-
-      <div className="home-action-row">
-  <Link to="/map" className="home-action-btn">
-    🗺️ {lang === "si" ? "සිතියමෙන් බලන්න" : "View Map"}
-  </Link>
-
-  <Link to="/route" className="home-action-btn">
-    🧭 {lang === "si" ? "මාර්ගය සැලසුම් කරන්න" : "Plan Route"}
-  </Link>
-</div>
 
       <div className="notice-box">
         <strong>
@@ -260,6 +355,16 @@ export default function Home({ lang = "si" }) {
               d.openTime,
               d.closeTime
             );
+
+            const distance =
+              userLocation && d.lat && d.lng
+                ? distanceKm(
+                    userLocation.lat,
+                    userLocation.lng,
+                    Number(d.lat),
+                    Number(d.lng)
+                  )
+                : null;
 
             return (
               <Link key={d.id} to={`/dansal/${d.id}`} className="dansal-card">
@@ -314,6 +419,12 @@ export default function Home({ lang = "si" }) {
                     👥 {d.queueVotesCount || 0}{" "}
                     {lang === "si" ? "ඡන්ද" : "votes"}
                   </span>
+
+                  {distance !== null && (
+                    <span className="tag tag-food">
+                      📍 {distance.toFixed(1)} km
+                    </span>
+                  )}
                 </div>
 
                 <div className="card-time">
@@ -344,8 +455,8 @@ export default function Home({ lang = "si" }) {
 
         <span className="count-badge">
           {lang === "si"
-            ? `මුළු දන්සල් ${filtered.length}ක්`
-            : `${filtered.length} Total`}
+            ? `මුළු දන්සල් ${sortedFiltered.length}ක්`
+            : `${sortedFiltered.length} Total`}
         </span>
       </div>
 
