@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
 import { collection, onSnapshot, orderBy, query } from "firebase/firestore";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { db } from "../firebase";
-import { timeAgo } from "../utils/timeAgo";
 import { getDansalTimeStatus } from "../utils/dansalStatus";
+import { timeAgo } from "../utils/timeAgo";
 
 export default function Thorans({ lang = "si" }) {
   const [thorans, setThorans] = useState([]);
@@ -110,6 +110,15 @@ export default function Thorans({ lang = "si" }) {
           </select>
         </div>
       </div>
+      <div className="home-action-row">
+  <Link to="/thoran-route" className="home-action-btn">
+    🧭 {lang === "si" ? "තොරණ මාර්ගය සැලසුම් කරන්න" : "Plan Thoran Route"}
+  </Link>
+
+  <Link to="/add-thoran" className="home-action-btn">
+    + {lang === "si" ? "තොරණක් එක් කරන්න" : "Add Thoran"}
+  </Link>
+</div>
 
       <div className="section-header">
         <span className="section-title">

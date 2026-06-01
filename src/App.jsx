@@ -13,6 +13,7 @@ import Analytics from "./pages/Analytics";
 import Admin from "./pages/Admin";
 import MyVesak from "./pages/MyVesak";
 import WelcomeScreen from "./components/WelcomeScreen";
+import ThoranRoutePlanner from "./pages/ThoranRoutePlanner";
 
 export default function App() {
   const [lang, setLang] = useState("si");
@@ -61,6 +62,10 @@ export default function App() {
               🗺️ {lang === "si" ? "සිතියම" : "Map"}
             </Link>
 
+            <Link to="/thoran-route" className="nav-btn">
+  🧭 {lang === "si" ? "තොරණ Route" : "Thoran Route"}
+</Link>
+
             <Link to="/my-vesak" className="nav-btn">
               ✨ {lang === "si" ? "මගේ වෙසක්" : "My Vesak"}
             </Link>
@@ -79,6 +84,7 @@ export default function App() {
           <Route path="/analytics" element={<Analytics lang={lang} />} />
           <Route path="/admin" element={<Admin lang={lang} />} />
           <Route path="/my-vesak" element={<MyVesak lang={lang} />} />
+          <Route path="/thoran-route" element={<ThoranRoutePlanner lang={lang} />} />
         </Routes>
 
         <div className="lotuses" />
